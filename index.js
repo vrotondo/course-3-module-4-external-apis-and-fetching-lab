@@ -35,3 +35,84 @@
 
 // Event Listener for Fetch Button
 // - Attach the main event listener to the button to start the process
+
+async function fetchWeatherData(city) {
+    const apiKey = '11ca5bc346a77d53d4dc1277552ae50f';
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
+
+    try {
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+            throw new Error('City not found');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+function displayWeather(data) {
+    const weatherDisplay = document.getElementById('weather-display');
+    const errorMessage = document.getElementById('error-message');
+
+    if (weatherDisplay) {
+        // Calculate temperature in Celsius from Kelvin
+        const temperature = Math.round((data.main.temp - 273.15));
+
+        weatherDisplay.innerHTML = `
+          <h2>Weather in ${data.name}</h2>
+          <p>Temperature: ${temperature}°C</p>
+          <p>Humidity: ${data.main.humidity}%</p>
+          <p>Description: ${data.weather[0].description}</p>
+        `;
+    }
+
+    if (errorMessage) {
+        errorMessage.textContent = '';
+        errorMessage.classList.add('hidden');
+    }
+}
+
+function displayError(message) {
+    const errorMessage = document.getElementById('error-message');
+    const weatherDisplay = document.getElementById('weather-display');
+
+    if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.classList.remove('hidden');
+    }
+
+    if (weatherDisplay) {
+        weatherDisplay.innerHTML = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const fetchButton = document.getElementById('fetch-weather');
+    const cityInput = document.getElementById('city-input');
+
+    if (!fetchButton || !cityInput) {
+        console.error('Required DOM elements not found.');
+        return;
+    }
+
+    fetchButton.addEventListener('click', async () => {
+        const city = cityInput.value.trim();
+
+        if (city) {
+            try {
+                const data = await fetchWeatherData(city);
+                displayWeather(data);
+            } catch (error) {
+                displayError(error.message);
+            }
+        } else {
+            displayError('Please enter a city name.');
+        }
+    });
+});
+
+module.exports = { fetchWeatherData, displayWeather, displayError };
